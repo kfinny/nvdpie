@@ -400,7 +400,8 @@ class CveResult(BaseModel):
     CVE_data_type: str
     CVE_data_format: str
     CVE_data_version: str
-    CVE_data_timestamp: str
+    CVE_data_numberOfCVEs: Optional[str]
+    CVE_data_timestamp: Optional[str]
     CVE_Items: List[CVEItem]
 
 
@@ -409,3 +410,6 @@ class Response(BaseModel):
     startIndex: int
     totalResults: int
     result: Union[CveResult, CpeResult]
+
+
+Node.update_forward_refs()
