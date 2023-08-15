@@ -1,18 +1,17 @@
 import urllib3
 import requests
-from .models import Response
+
+from typing import Any
 
 
 class Client:
 
     def __init__(self, apikey: str | None = None):
         self.session = requests.Session()
-        self.session.verify = False
-        if not self.session.verify:
-            urllib3.disable_warnings()
+        self.session.verify = True
         self.apikey = apikey
         self.delay = 0.6 if self.apikey else 6
-        self.version = '1.0'
+        self.version = '2.0'
         self.host = 'services.nvd.nist.gov'
         self.headers = {
             'Content-Type': 'application/json'
@@ -20,38 +19,38 @@ class Client:
 
     def __prepare_request__(self, url: str, **params) -> requests.PreparedRequest:
         if self.apikey:
-            params.update({'apikey': self.apikey})
+            self.headers.update({'apiKey': self.apikey})
         return requests.Request(method='GET', url=url, headers=self.headers, params=params).prepare()
 
-    def cve(self, cve_id, add_ons: bool = False) -> Response:
-        url = f'https://{self.host}/rest/json/cve/{self.version}/{cve_id}'
-        params = {}
-        if add_ons:
-            params.update({'addOns': 'dictionaryCpes'})
-
-        response = self.session.send(self.__prepare_request__(url, **params))
-        if response.ok:
-            return Response(**response.json())
-        response.raise_for_status()
-
-    def cves(self, add_ons: bool = False) -> Response:
+    def cves(self, **params) -> dict[Any, Any]:
         url = f'https://{self.host}/rest/json/cves/{self.version}'
-        params = {}
-        if add_ons:
-            params.update({'addOns': 'dictionaryCpes'})
-
-        response = requests.get(url, params=params, headers=self.headers)
+        prepared = self.__prepare_request__(url, **params)
+        response = self.session.send(prepared)
         if response.ok:
-            return Response(**response.json())
+            return response.json()
         response.raise_for_status()
 
-    def cpes(self, add_ons: bool = False) -> Response:
-        url = f'https://{self.host}/rest/json/cpes/{self.version}'
-        params = {}
-        if add_ons:
-            params.update({'addOns': 'cves'})
-
-        response = requests.get(url, params=params, headers=self.headers)
+    def cvehistory(self, **params) -> dict[Any, Any]:
+        url = f'https://{self.host}/rest/json/cvehistory/{self.version}'
+        prepared = self.__prepare_request__(url, **params)
+        response = self.session.send(prepared)
         if response.ok:
-            return Response(**response.json())
+            return response.json()
+        response.raise_for_status()
+
+    def cpes(self, **params) -> dict[Any, Any]:
+        url = f'https://{self.host}/rest/json/cpes/{self.version}'
+        prepared = self.__prepare_request__(url, **params)
+        response = self.session.send(prepared)
+        if response.ok:
+            return response.json()
+        response.raise_for_status()
+
+    def cpematch(self, **params) -> dict[Any, Any]:
+        url = f'https://{self.host}/rest/json/cpematch/{self.version}'
+        prepared = self.__prepare_request__(url, **params)
+        response = self.session.send(prepared)
+        if response.ok:
+            # return Response(**response.json())
+            return response.json()
         response.raise_for_status()
